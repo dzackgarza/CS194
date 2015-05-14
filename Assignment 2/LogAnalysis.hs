@@ -43,10 +43,10 @@ parse s = map parseMessage $ lines s
 
 insert :: LogMessage -> MessageTree -> MessageTree
 insert (Unknown _) tree = tree
-insert msg Leaf = (Node Leaf msg Leaf)
+insert msg Leaf         = Node Leaf msg Leaf
 insert newMsg (Node ml rootMsg mr)
-	| t_new < t_root 	= (Node (insert newMsg ml) rootMsg mr)
-	| otherwise 		= (Node ml rootMsg (insert newMsg mr))
+	| t_new < t_root 	= Node (insert newMsg ml) rootMsg mr
+	| otherwise 		= Node ml rootMsg (insert newMsg mr)
 	where 
 		t_new 	= getTimestamp newMsg
 		t_root 	= getTimestamp rootMsg
@@ -64,22 +64,20 @@ build = foldl (flip insert) Leaf
 
 inOrder :: MessageTree -> [LogMessage]
 inOrder Leaf 					= []
-inOrder (Node l msg r)			= (inOrder l) ++ [msg] ++ (inOrder r)
+inOrder (Node l msg r)			= inOrder l ++ [msg] ++ inOrder r
 
 whatWentWrong :: [LogMessage] -> [String]
-whatWentWrong xs = (map extractMessage . filter isRelevant) xs
-
+whatWentWrong = map extractMessage . filter isRelevant
 
 isRelevant :: LogMessage -> Bool
-isRelevant msg
-	| i > 50 	= True
-	| otherwise = False
-	where
-		i = getErrorCode msg
+isRelevant msg = getErrorCode msg > 50
 
 getErrorCode :: LogMessage -> Int 
 getErrorCode (LogMessage (Error i) _ _) = i
-getErrorCode (LogMessage _ _ _) = 0
+getErrorCode (LogMessage {}) = 0
+getErrorCode (Unknown _) = 0
 
 extractMessage :: LogMessage -> String
 extractMessage (LogMessage (Error _) _ s) = s
+extractMessage (LogMessage _ _ s) = s 
+extractMessage (Unknown s) = s

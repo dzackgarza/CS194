@@ -7,6 +7,7 @@ import Log
 
 main :: IO ()
 
+
 -- runTestTT has type Test -> IO Counts, while main has type IO ()
 -- So, bind to print to send it to the console.
 main = runTestTT tests >>= print
@@ -19,14 +20,22 @@ test1 = parseMessage "I 29 la la la"				~?= LogMessage Info 29 "la la la"
 test2 = parseMessage "This is not the right format" ~?= Unknown "This is not the right format"
 
 -- Inserting an unknown element into a tree should just return that tree.
-test3 = insert (Unknown "") Leaf 				~?= Leaf
-test4 = insert (Unknown "") (emptyInfoTree 5) 	~?= emptyInfoTree 5
-test5 = insert (infoMsg 5) Leaf					~?= emptyInfoTree 5
-test6 = insert (infoMsg 1) (emptyInfoTree 9) 	~?= Node (emptyInfoTree 1) 	(infoMsg 9)	Leaf
-test7 = insert (infoMsg 9) (emptyInfoTree 1)	~?= Node Leaf 				(infoMsg 1)	(emptyInfoTree 9)
+test3 = insert (Unknown "") Leaf                ~?= Leaf
+test4 = insert (Unknown "") (emptyInfoTree 5)   ~?= emptyInfoTree 5
+test5 = insert (infoMsg 5)  Leaf                ~?= emptyInfoTree 5
+test6 = insert (infoMsg 1)  (emptyInfoTree 9)   ~?= Node (emptyInfoTree 1) (infoMsg 9) Leaf
+test7 = insert (infoMsg 9)  (emptyInfoTree 1)   ~?= Node Leaf (infoMsg 1) (emptyInfoTree 9)
 
-test8 = build [infoMsg 7, infoMsg 1, infoMsg 9, infoMsg 3] ~?= Node (Node Leaf (infoMsg 1) (emptyInfoTree 3)) (infoMsg 7) (emptyInfoTree 9)
-test9 = inOrder (Node (Node Leaf (infoMsg 1) (emptyInfoTree 3)) (infoMsg 7) (emptyInfoTree 9)) ~?= [infoMsg 1, infoMsg 3, infoMsg 7, infoMsg 9]
+test8 = build randomList ~?= Node tree_0L (infoMsg 7) tree_0R
+    where
+        randomList = [infoMsg 7, infoMsg 1, infoMsg 9, infoMsg 3]
+        tree_0L = Node Leaf (infoMsg 1) (emptyInfoTree 3)
+        tree_0R = emptyInfoTree 9
+
+test9  = inOrder (Node tree_0L (infoMsg 7) (emptyInfoTree 9)) ~?= inOrderList
+    where
+        tree_0L     = Node Leaf (infoMsg 1) (emptyInfoTree 3)
+        inOrderList = [infoMsg 1, infoMsg 3, infoMsg 7, infoMsg 9]
 
 test10 = isRelevant (LogMessage (Error 49) 0 "") ~?= False
 test11 = isRelevant (LogMessage (Error 51) 0 "") ~?= True
@@ -70,3 +79,4 @@ emptyInfoTree n = Node Leaf (infoMsg n) Leaf
 
 -- Create an empty info message with timestamp n
 infoMsg n = LogMessage Info n ""
+
